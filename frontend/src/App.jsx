@@ -96,7 +96,8 @@ const App = () => {
       setStatus("building");
       const protocol =
         window.location.hostname === "localhost" ? "http" : "https";
-      setDeployedUrl(`${protocol}://${project.subDomain}.${PROXY_DOMAIN}`);
+      const cleanDomain = PROXY_DOMAIN.replace(/^https?:\/\//, "");
+      setDeployedUrl(`${protocol}://${project.subDomain}.${cleanDomain}`);
     } catch (error) {
       console.error(error);
       setStatus("error");
@@ -145,10 +146,17 @@ const App = () => {
           "Deployment failed. If this is a private repository, please make it Public in GitHub settings and click Redeploy.",
         );
       }
+
+      if (
+        message.toLowerCase().includes("upload completed") &&
+        status !== "success"
+      ) {
+        setTimeout(() => setStatus("success"), 1500);
+      }
     };
     socket.on("message", handleMessage);
     return () => socket.off("message", handleMessage);
-  }, []);
+  }, [status]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center p-4 font-sans selection:bg-blue-500/30">
