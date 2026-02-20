@@ -231,20 +231,14 @@ const App = () => {
                 </span>
               )}
             </div>
-
             <div
               ref={logContainerRef}
-              className={`bg-[#0c0c0c] rounded-lg p-4 h-80 overflow-y-auto ...`}
+              className="bg-[#0c0c0c] rounded-lg p-4 h-80 overflow-y-auto font-mono text-xs md:text-sm custom-scrollbar border border-slate-800/50"
             >
               {status === "error" ? (
                 <div className="flex flex-col items-center justify-center h-full text-red-400 gap-2">
                   <AlertCircle className="w-8 h-8" />
-                  <span className="font-mono text-center">
-                    Connection Error: {errorDetails}
-                  </span>
-                  <p className="text-xs text-red-300/60">
-                    Check if the API Server is awake.
-                  </p>
+                  <span>{errorDetails}</span>
                 </div>
               ) : logs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-600 gap-2">
@@ -256,8 +250,20 @@ const App = () => {
               ) : (
                 <div className="space-y-1">
                   {logs.map((log, index) => (
-                    <div key={index} className="...">
-                      {/* ... existing log mapping ... */}
+                    <div
+                      key={index}
+                      className="break-all hover:bg-white/5 py-0.5 px-2 -mx-2 rounded transition-colors flex"
+                    >
+                      <span className="text-slate-600 select-none mr-3 shrink-0">{`>`}</span>
+                      <span
+                        className={
+                          log.toLowerCase().includes("error")
+                            ? "text-red-400"
+                            : "text-slate-300"
+                        }
+                      >
+                        {log}
+                      </span>
                     </div>
                   ))}
                 </div>
