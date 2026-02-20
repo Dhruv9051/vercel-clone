@@ -167,30 +167,30 @@ async function kafkaConsumer() {
             console.log(`Received batch of ${messages.length} messages`);
             for (const message of messages) {
                 // Parse message
-                const payload = JSON.parse(message.value.toString());
-    
+                const payload = JSON.parse(message.value.toString());    
                 // Extract ID
                 const activeDeploymentId = payload.DEPLOYMENT_ID || payload.deploymentId;
                 const logText = payload.log;
-                try {
-                    const { query_id } = await client.insert({
-                    table: 'log_events',
-                    values: [
-                        {
-                            event_id: uuidv4(),
-                            deployment_id: activeDeploymentId,
-                            log: logText,
-                        }
-                    ],
-                    format: 'JSONEachRow',
-                });
-                resolveOffset(message.offset);
-                await commitOffsetsIfNecessary(message.offset);
-                await heartbeat();
                 const roomName = `logs:${activeDeploymentId}`;
-                console.log(`Relaying log to Socket Room: ${roomName}`);
-                io.to(roomName).emit('message', logText);
-                console.log(`Inserted log into ClickHouse with query_id: ${query_id}`);
+                try {
+                    console.log(`Relaying log to Socket Room: ${roomName}`);
+                    io.to(roomName).emit('message', logText);
+
+                    await client.insert({
+                        table: 'log_events',
+                        values: [
+                            {
+                                event_id: uuidv4(),
+                                deployment_id: activeDeploymentId,
+                                log: logText,
+                            }
+                        ],
+                        format: 'JSONEachRow',
+                    });
+
+                    resolveOffset(message.offset);
+                    await commitOffsetsIfNecessary(message.offset);
+                    await heartbeat();
                 } catch (e) {
                     console.log(e);
                 }
