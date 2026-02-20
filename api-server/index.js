@@ -120,8 +120,8 @@ app.post('/deploy', async (req, res) => {
         networkConfiguration: {
             awsvpcConfiguration: {
                 assignPublicIp: 'ENABLED',
-                subnets: process.env.ECS_SUBNETS,
-                securityGroups: process.env.ECS_SECURITY_GROUPS,
+                subnets: [process.env.ECS_SUBNETS],
+                securityGroups: [process.env.ECS_SECURITY_GROUPS],
             },
         },
         overrides: {
