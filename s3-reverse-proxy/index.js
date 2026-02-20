@@ -43,6 +43,6 @@ app.use(async (req, res) => {
     return proxy.web(req, res, { target: resolvesTo, changeOrigin: true });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`S3 Reverse Proxy running on port ${PORT}`);
 });

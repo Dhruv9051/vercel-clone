@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const { generateSlug } = require('random-word-slugs');
 const { ECSClient, RunTaskCommand } = require('@aws-sdk/client-ecs');
@@ -14,6 +15,8 @@ const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 9000;
+app.use(express.json());
+app.use(cors());
 
 const httpServer = http.createServer(app);
 
@@ -34,7 +37,7 @@ const client = createClient({
 
 const kafka = new Kafka({
     clientId: 'api-server',
-    brokers: process.env.KAFKA_BROKER,
+    brokers: [process.env.KAFKA_BROKER],
     ssl: {
         ca: [process.env.KAFKA_CA_CERT]
     },
@@ -52,8 +55,6 @@ const ecsClient = new ECSClient({ credentials: {
     secretAccessKey: process.env.ECS_SECRET_ACCESS_KEY,
 }, region: process.env.ECS_REGION });
 
-app.use(express.json());
-app.use(cors());
 
 app.post('/project', async (req, res) => {
     const schema = z.object({
