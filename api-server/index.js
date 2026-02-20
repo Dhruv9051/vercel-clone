@@ -26,31 +26,31 @@ const io = new Server(httpServer, {
 });
 
 const client = createClient({
-    url: CLICKHOUSE_URL,
-    database: CLICKHOUSE_DB,
-    username: CLICKHOUSE_USERNAME,
-    password: CLICKHOUSE_PASSWORD,
+    url: process.env.CLICKHOUSE_URL,
+    database: process.env.CLICKHOUSE_DB,
+    username: process.env.CLICKHOUSE_USERNAME,
+    password: process.env.CLICKHOUSE_PASSWORD,
 });
 
 const kafka = new Kafka({
-    clientId: `api-server`,
-    brokers: [KAFKA_BROKER],
+    clientId: 'api-server',
+    brokers: process.env.KAFKA_BROKER,
     ssl: {
         ca: [fs.readFileSync(path.join(__dirname, 'kafka.pem'), 'utf-8')]
     },
     sasl: {
-        username: KAFKA_USERNAME,
-        password: KAFKA_PASSWORD,
+        username: process.env.KAFKA_USERNAME,
+        password: process.env.KAFKA_PASSWORD,
         mechanism: 'plain'
     }
 });
 
-const consumer = kafka.consumer({ groupId: KAFKA_CONSUMER_GROUP_ID });
+const consumer = kafka.consumer({ groupId: process.env.KAFKA_CONSUMER_GROUP_ID });
 
 const ecsClient = new ECSClient({ credentials: {
-    accessKeyId: ECS_ACCESS_KEY_ID,
-    secretAccessKey: ECS_SECRET_ACCESS_KEY,
-}, region: ECS_REGION });
+    accessKeyId: process.env.ECS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.ECS_SECRET_ACCESS_KEY,
+}, region: process.env.ECS_REGION });
 
 app.use(express.json());
 app.use(cors());
@@ -112,15 +112,15 @@ app.post('/deploy', async (req, res) => {
 
     // Spin the container
     const command = new RunTaskCommand({
-        cluster: ECS_CLUSTER,
-        taskDefinition: ECS_TASK_DEFINITION,
-        launchType: ECS_LAUNCH_TYPE,
+        cluster: process.env.ECS_CLUSTER,
+        taskDefinition: process.env.ECS_TASK_DEFINITION,
+        launchType: process.env.ECS_LAUNCH_TYPE,
         count: 1,
         networkConfiguration: {
             awsvpcConfiguration: {
                 assignPublicIp: 'ENABLED',
-                subnets: ECS_SUBNETS,
-                securityGroups: ECS_SECURITY_GROUPS,
+                subnets: process.env.ECS_SUBNETS,
+                securityGroups: process.env.ECS_SECURITY_GROUPS,
             },
         },
         overrides: {
