@@ -1,7 +1,7 @@
 const express = require('express')
 const httpproxy = require('http-proxy');
 require('dotenv').config()
-const { PrismaClient } = require('../api-server/node_modules/@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 
