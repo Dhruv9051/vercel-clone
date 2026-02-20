@@ -97,7 +97,7 @@ const App = () => {
       const protocol =
         window.location.hostname === "localhost" ? "http" : "https";
       const cleanDomain = PROXY_DOMAIN.replace(/^https?:\/\//, "");
-      setDeployedUrl(`${protocol}://${project.subDomain}.${cleanDomain}`);
+      setDeployedUrl(`${protocol}://${cleanDomain}/${project.subDomain}`);
     } catch (error) {
       console.error(error);
       setStatus("error");
