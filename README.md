@@ -251,7 +251,7 @@ POST /deploy   ──▶  Prisma creates Deployment record (status: QUEUED)
         │
         ▼
 ECS RunTask    ──▶  Fargate container starts with env vars:
-                    GIT_REPO_URL, PROJECT_ID, DEPLOYMENT_ID
+        |           GIT_REPO_URL, PROJECT_ID, DEPLOYMENT_ID
         │
         ▼
 script.js runs ──▶  Clones → Builds → Uploads → Publishes logs to Kafka
