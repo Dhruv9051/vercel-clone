@@ -559,6 +559,81 @@ http://proxy:8000/happy-golden-panda/  →  s3://bucket/__outputs/{projectId}/in
 
 ---
 
+## 🔮 Future Enhancements
+
+The current platform focuses on static site hosting — cloning a repo, building it, and serving the output. Below are planned improvements that would evolve Sketch VC into a full-featured deployment platform.
+
+### 👤 User Authentication & Project Ownership
+
+Currently, anyone can deploy any repo and deployments are not tied to any user account. A proper auth layer would enable:
+
+- **Registration & Login** — Email/password or OAuth (GitHub, Google) via a provider like NextAuth or Clerk
+- **User-scoped projects** — Each project and deployment stored against a `userId` in the database, so users can view and manage only their own deployments
+- **Dashboard** — A personal dashboard listing all projects, their subdomains, deployment history, and live status
+- **Protected API routes** — Middleware to ensure users can only trigger, view, or delete their own resources
+
+---
+
+### 🔑 Custom Environment Variables
+
+Right now the build server only supports public repositories with no runtime configuration. Many real-world apps depend on environment variables (API keys, feature flags, backend URLs, etc.). This would require:
+
+- **Env var UI** — A form in the frontend to add key-value pairs before deploying
+- **Secure storage** — Encrypted storage of env vars in the database (e.g., AES encryption or AWS Secrets Manager)
+- **Injection at build time** — Passing stored env vars into the ECS task's `containerOverrides.environment` array alongside existing vars
+- **Runtime env support** — For frameworks like Next.js, injecting vars into a generated `.env.production` file before `npm run build`
+
+---
+
+### 🌐 Custom Domains
+
+Instead of auto-generated slugs, users could bring their own domain:
+
+- **Domain registration UI** — Users input a custom domain (e.g., `myapp.com`)
+- **DNS verification** — Generate a TXT or CNAME record for the user to add at their DNS provider, then verify ownership
+- **Routing update** — The reverse proxy resolves custom domains in addition to subdomains by checking a `customDomain` field on the Project model
+- **SSL termination** — Auto-provision TLS certificates via Let's Encrypt or AWS ACM
+
+---
+
+### 🔄 GitHub Webhooks & Auto-Deploy
+
+Enable continuous deployment so every push to `main` triggers a redeploy automatically:
+
+- **Webhook registration** — On project creation, register a webhook on the user's GitHub repo via the GitHub API (requires OAuth scope)
+- **Webhook endpoint** — A new `POST /webhook` route that validates the payload signature and triggers a new deployment
+- **Branch targeting** — Let users specify which branch to watch (default: `main`)
+
+---
+
+### 📊 Deployment Status Tracking & Analytics
+
+- **Live status updates** — Update `Deployment.status` in the database (`QUEUED → BUILDING → SUCCESS / FAILED`) by parsing log output, so state is accurate even after a browser reconnect
+- **Build duration tracking** — Record `startedAt` and `completedAt` timestamps per deployment
+- **Usage metrics** — Track number of deployments, average build times, and S3 storage per user, useful for enforcing plan-based limits
+
+---
+
+### 🗂️ Full-Stack & Server-Side App Support
+
+Currently only static build outputs (`dist/` or `build/`) are uploaded to S3. Extending to full-stack apps would involve:
+
+- **Persistent container hosting** — Instead of terminating after upload, keep the ECS task running and proxy live traffic directly to it
+- **Port detection** — Inspect `package.json` start scripts or a `sketch.config.json` manifest to determine the app's listen port
+- **Health checks & auto-restart** — Monitor running containers and restart on failure, similar to how Render or Railway operate
+
+---
+
+### 🔒 Private Repository Support
+
+Currently, cloning fails silently for private repos. Proper support would include:
+
+- **GitHub OAuth integration** — Request `repo` scope during login to obtain a user access token
+- **Authenticated cloning** — Inject the token into the git clone URL at build time: `git clone https://oauth2:{token}@github.com/...`
+- **Token storage** — Securely store and refresh OAuth tokens per user in the database
+
+---
+
 <div align="center">
 
 Built with ☕ and way too many AWS console tabs.
