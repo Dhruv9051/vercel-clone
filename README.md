@@ -535,7 +535,7 @@ Logs flow through a multi-hop pipeline with no loss:
 ```
 ECS Container stdout/stderr
         ↓
-Kafka Producer (in script.js)
+Kafka Producer (in build-server/script.js)
         ↓
 Kafka Topic: container-logs
         ↓
