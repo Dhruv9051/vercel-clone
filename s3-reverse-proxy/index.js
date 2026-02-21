@@ -11,16 +11,14 @@ const PORT = process.env.PORT || 8000;
 
 const proxy = httpProxy.createProxyServer({});
 
-// Handle proxy errors properly
 proxy.on('error', (err, req, res) => {
-  console.error('Proxy error:', err.message);
+  console.error('Proxy error:', err);
   res.status(500).send('Proxy Error');
 });
 
 app.use(async (req, res) => {
   try {
-    const pathParts = req.url.split('/').filter(Boolean);
-    const slug = pathParts[0];
+    const slug = req.url.split('/').filter(Boolean)[0];
 
     if (!slug) {
       return res.status(400).send('Project slug missing');
@@ -34,12 +32,11 @@ app.use(async (req, res) => {
       return res.status(404).send('Project not found');
     }
 
-    const target = `${BASE_PATH}${project.id}`;
+    const target = `${BASE_PATH}${project.id}/`;
 
-    // Remove slug from path
-    req.url = req.url.replace(`/${slug}`, '') || '/index.html';
+    req.url = req.url.replace(`/${slug}`, '');
 
-    if (req.url === '/') {
+    if (!req.url || req.url === '') {
       req.url = '/index.html';
     }
 
@@ -47,11 +44,11 @@ app.use(async (req, res) => {
 
     proxy.web(req, res, {
       target,
-      changeOrigin: true,
+      changeOrigin: true
     });
 
-  } catch (error) {
-    console.error('Server error:', error);
+  } catch (err) {
+    console.error(err);
     res.status(500).send('Internal Server Error');
   }
 });
