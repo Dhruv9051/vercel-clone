@@ -323,10 +323,12 @@ const App = () => {
             <button
               onClick={() => {
                 setStatus("idle");
-
                 setLogs([]);
-
                 setRepoUrl("");
+                setProjectId("");
+                setDeploymentId("");
+                setDeployedUrl("");
+                setErrorDetails(null);
               }}
               className="mt-6 text-sm text-slate-500 hover:text-white transition-colors w-full text-center hover:bg-slate-800 py-2 rounded-lg"
             >
