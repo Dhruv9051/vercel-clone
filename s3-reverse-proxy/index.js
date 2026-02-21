@@ -25,20 +25,21 @@ app.use(async (req, res) => {
     let slug = pathParts[0];
     let project;
 
-    // Check if the slug is directly in the URL
-    const systemFiles = ['favicon.ico', 'manifest.json', 'robots.txt', 'logo192.png', 'logo512.png'];
-    if (slug && !systemFiles.includes(slug) && slug !== 'static' && !slug.includes('.')) {
+    // Check direct URL
+    const systemFiles = ['favicon.ico', 'manifest.json', 'logo192.png', 'logo512.png'];
+    if (slug && !systemFiles.includes(slug) && !slug.includes('.')) {
       project = await prisma.project.findFirst({ where: { subDomain: slug } });
     }
 
-    // If it's an asset request, check the Referer header
+    // Check Referer for All system files
     if (!project && req.headers.referer) {
       const refererUrl = new URL(req.headers.referer);
       const refererSlug = refererUrl.pathname.split('/').filter(Boolean)[0];
       
+      // If we find a slug in the referer, assume this asset belongs to that project
       if (refererSlug && !systemFiles.includes(refererSlug)) {
         project = await prisma.project.findFirst({ where: { subDomain: refererSlug } });
-        slug = null; // Don't strip the slug because it's not in the current URL
+        slug = null; 
       }
     }
 
