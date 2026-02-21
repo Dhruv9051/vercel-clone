@@ -165,13 +165,25 @@ async function kafkaConsumer() {
             const messages = batch.messages;
             console.log(`Received batch of ${messages.length} messages`);
             for (const message of messages) {
-                // Parse message
-                const payload = JSON.parse(message.value.toString());    
+                const stringMessage = message.value.toString();
+                let payload;
+
+                try {
+                    payload = JSON.parse(stringMessage);
+                } catch (e) {
+                    console.error('Error parsing Kafka message:', e);
+                    // Resolve offset to skip malformed message so we don't get stuck
+                    resolveOffset(message.offset);
+                    await commitOffsetsIfNecessary(message.offset);
+                    await heartbeat();
+                    continue;
+                }
+
                 console.log('Kafka Payload:', payload);
-                // Extract ID
                 const activeDeploymentId = payload.DEPLOYMENT_ID || payload.deploymentId;
                 const logText = payload.log;
                 const roomName = `logs:${activeDeploymentId}`;
+
                 try {
                     console.log(`Relaying log to Socket Room: ${roomName}`);
                     io.to(roomName).emit('message', logText);
@@ -187,12 +199,13 @@ async function kafkaConsumer() {
                         ],
                         format: 'JSONEachRow',
                     });
-
+                } catch (e) {
+                    console.log('Error processing message:', e);
+                } finally {
+                    // Always acknowledge the message to prevent getting stuck
                     resolveOffset(message.offset);
                     await commitOffsetsIfNecessary(message.offset);
                     await heartbeat();
-                } catch (e) {
-                    console.log(e);
                 }
             }
         }
