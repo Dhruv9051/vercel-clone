@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:9000";
-const PROXY_DOMAIN = import.meta.env.VITE_PROXY_URL || "localhost:8000";
+const PROXY_DOMAIN = import.meta.env.VITE_PROXY_URL || "http://localhost:8000";
 const socket = io(API_URL);
 
 const App = () => {
