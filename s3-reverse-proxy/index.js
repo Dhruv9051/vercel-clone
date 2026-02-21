@@ -18,7 +18,10 @@ proxy.on('error', (err, req, res) => {
 
 app.use(async (req, res) => {
   try {
+    console.log("Incoming request:", req.url);
+
     const slug = req.url.split('/').filter(Boolean)[0];
+    console.log("Extracted slug:", slug);
 
     if (!slug) {
       return res.status(400).send('Project slug missing');
@@ -28,11 +31,14 @@ app.use(async (req, res) => {
       where: { subDomain: slug }
     });
 
+    console.log("DB project result:", project);
+
     if (!project) {
       return res.status(404).send('Project not found');
     }
 
     const target = `${BASE_PATH}${project.id}/`;
+    console.log("Proxy target:", target);
 
     req.url = req.url.replace(`/${slug}`, '');
 
@@ -40,7 +46,7 @@ app.use(async (req, res) => {
       req.url = '/index.html';
     }
 
-    console.log(`Proxying → ${target}${req.url}`);
+    console.log("Final proxied URL:", target + req.url);
 
     proxy.web(req, res, {
       target,
@@ -48,7 +54,7 @@ app.use(async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("FULL ERROR:", err);
     res.status(500).send('Internal Server Error');
   }
 });
