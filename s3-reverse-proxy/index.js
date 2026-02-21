@@ -23,43 +23,32 @@ app.use(async (req, res) => {
   try {
     const pathParts = req.url.split('/').filter(Boolean);
     let slug = pathParts[0];
-    
-    // Check if the first part of the path is a real project
-    let project = await prisma.project.findFirst({
-      where: { subDomain: slug || "" }
-    });
+    let project;
 
-    // If not found in path, check if we have a saved project in a cookie
+    // Check if the URL contains a valid project slug
+    if (slug && slug !== 'static' && !slug.includes('.')) {
+      project = await prisma.project.findFirst({ where: { subDomain: slug } });
+    }
+
+    // If no slug in URL, check the 'activeProject' cookie
     if (!project && req.cookies?.activeProject) {
-      project = await prisma.project.findUnique({
-        where: { id: req.cookies.activeProject }
-      });
-      // In this case, the URL doesn't have the slug, so don't try to strip it
-      slug = null; 
+      project = await prisma.project.findUnique({ where: { id: req.cookies.activeProject } });
+      slug = null; // Assets don't have the slug in their URL
     }
 
     if (!project) return res.status(404).send('Project not found');
 
-    // Save this project ID in a cookie so subsequent asset requests work
+    // Save project ID in cookie so the assets work
     res.cookie('activeProject', project.id, { maxAge: 900000, httpOnly: true });
 
     const target = `${BASE_PATH}${project.id}/`;
     
-    // Clean the URL for S3
-    if (slug) {
-        req.url = req.url.replace(`/${slug}`, '');
-    }
-    
-    if (!req.url || req.url === '/' || req.url === '') {
-      req.url = '/index.html';
-    }
+    // Clean URL: Remove slug if present, otherwise default to index.html
+    if (slug) req.url = req.url.replace(`/${slug}`, '');
+    if (!req.url || req.url === '/' || req.url === '') req.url = '/index.html';
 
-    console.log(`Proxying ${req.url} for project ${project.subDomain} to ${target}`);
-
-    proxy.web(req, res, { target, changeOrigin: true });
-
+    return proxy.web(req, res, { target, changeOrigin: true });
   } catch (err) {
-    console.error("PROXY ERROR:", err);
     res.status(500).send('Internal Server Error');
   }
 });
